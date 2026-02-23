@@ -14,6 +14,10 @@ public class ColeccionVentas {
     public ColeccionVentas(){
         LPPF  = new LinkedList<>();
     }
+    
+    public LinkedList<Venta> getLista() {
+        return LPPF;
+    }
 	
     public void insBack(Venta v)
     {
@@ -69,10 +73,24 @@ public class ColeccionVentas {
 	     return listaVO;
 
     }
+    
+    
+    
     public int Largo()
     {
     	return LPPF.size();
     }
 	
+    public Venta obtenerUltimaVenta() {
+        if (LPPF.isEmpty()) {
+            return null;
+        }
+        return LPPF.getLast();
+    }
+    
+    public void eliminarVenta(int numVenta)
+    {
+    	LPPF.remove(numVenta);
+    }
 
 }

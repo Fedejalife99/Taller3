@@ -10,6 +10,7 @@ public class Venta {
 	private double total;
 	private boolean finalizado;
 	private SecCantPostres sec;
+	
 	public Venta(String direccion, int numeroVenta) 
 	{
 		this.numeroVenta = numeroVenta;
@@ -52,5 +53,5 @@ public class Venta {
 	public void setSec(SecCantPostres sec) {
 		this.sec = sec;
 	}
-
+	
 }

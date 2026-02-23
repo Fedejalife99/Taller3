@@ -8,11 +8,16 @@ import java.util.ArrayList;
 
 public class SecCantPostres{
 	private ArrayList<CantPostre> ACT;
+	
 	public SecCantPostres()
 	{}
 	public int Largo()
 	{
 		return ACT.size();
+	}
+	public List<CantPostre> getLista()
+	{
+		return ACT;
 	}
 	public void insBack(CantPostre cant)
 	{
@@ -69,9 +74,6 @@ public class SecCantPostres{
 		{
 			ACT.get(i).setCantidad(cant);
 		}
-		else {
-			
-		}
 	}
 	
 	public void eliminarCantPostre(String codigo, int cant)
@@ -97,6 +99,11 @@ public class SecCantPostres{
 			}
 		}
 		return existe;
+	}
+	
+	public CantPostre darCantPostre(int pos)
+	{
+		return ACT.get(pos);
 	}
 	
 }
