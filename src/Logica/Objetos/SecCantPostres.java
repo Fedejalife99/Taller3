@@ -18,10 +18,6 @@ public class SecCantPostres{
 	{
 		return ACT.size();
 	}
-	public List<CantPostre> getLista()
-	{
-		return ACT;
-	}
 	public void insBack(CantPostre cant)
 	{
 		this.ACT.add(cant);
@@ -99,6 +95,32 @@ public class SecCantPostres{
 	public CantPostre darCantPostre(int pos)
 	{
 		return ACT.get(pos);
+	}
+	public double recaudadoPorPostre(String cod, LocalDate fec)
+	{
+		double montoTotal = 0;
+		for (CantPostre cp : ACT) {
+			
+            if (cp.getPostre().getCodigo().equals(cod)) {
+
+                int cantidad = cp.getCantidad();
+                double precio = cp.getPostre().getPrecioUnitario();
+
+                montoTotal += precio * cantidad;
+            }
+        }
+		return montoTotal;
+	}
+	public int CantidadTotalPostre(String codigo)
+	{
+		int cantidad = 0;
+		for (CantPostre cp : ACT) {
+			
+            if (cp.getPostre().getCodigo().equals(codigo)) {
+                cantidad = cp.getCantidad();
+            }
+        }
+		return cantidad;
 	}
 	
 }

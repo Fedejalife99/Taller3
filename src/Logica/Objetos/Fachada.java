@@ -100,7 +100,7 @@ public class Fachada {
 			throw new CantidadUnidadesException("La cantidad de postres debe estar entre 1 y 40.");
 		}
 		
-		int totalActual = aux.getSec().darCantidadTotalPostres();
+		int totalActual = aux.darCantPostres();
 		
 		if (totalActual == 40) {
 			throw new CantidadUnidadesException("No se pueden agregar más postres. La venta ya tiene 40.");
@@ -108,14 +108,14 @@ public class Fachada {
 		
 		int nuevoTotal = totalActual + cantUnidades;
 		
-		if (aux.getSec().ExistePostreEnSec(codigoPostre)) {
+		if (aux.existePostreEnVenta(codigoPostre)) {
 
 		    if (nuevoTotal > 40) {
-		        aux.getSec().SetCantPostre(codigoPostre, 40);
+		        aux.setCantidadPostre(codigoPostre, 40);
 		        throw new CantidadUnidadesException("Se limitó la cantidad total a 40 unidades.");
 		    }
 
-		    aux.getSec().SetCantPostre(codigoPostre, nuevoTotal);
+		    aux.setCantidadPostre(codigoPostre, nuevoTotal);
 		    double precio = postres.find(codigoPostre).getPrecioUnitario();
 		    aux.setTotal(aux.getTotal() + precio * cantUnidades);
 
@@ -127,7 +127,7 @@ public class Fachada {
 
 		    Postre p = postres.find(codigoPostre);
 		    CantPostre cantp = new CantPostre(p, nuevoTotal);
-		    aux.getSec().insBack(cantp);
+		    aux.insertarCantPostre(cantp);
 		    aux.setTotal(aux.getTotal() + p.getPrecioUnitario() * cantUnidades);
 		}
 	}
@@ -154,7 +154,7 @@ public class Fachada {
 				}
 				else
 				{
-					if(!aux.getSec().ExistePostreEnSec(codPos))
+					if(!aux.existePostreEnVenta(codPos))
 					{
 						throw new PostreNoExisteException("El postre no está asociado a la venta.");
 					}
@@ -162,10 +162,9 @@ public class Fachada {
 					{
 						 int i = 0;
 						 boolean encontre = false;
-						 SecCantPostres auxSec = aux.getSec();
-							 while(i<auxSec.Largo() && !encontre)
+							 while(i<aux.LargoSecuencia() && !encontre)
 							 {
-								 CantPostre cp = auxSec.darCantPostre(i);
+								 CantPostre cp = aux.CantPostreIndice(i);
 								 
 								 if(cp.getPostre().getCodigo().equals(codPos))
 								 {
@@ -178,13 +177,14 @@ public class Fachada {
 										 int nuevaCantidad = cp.getCantidad() - cant;
 										 if(nuevaCantidad>0)
 										 {
-											 auxSec.SetCantPostre(codPos, nuevaCantidad);
-											 double restarMonto = cp.getPostre().getPrecioUnitario() * nuevaCantidad;
+											 aux.setCantidadPostre(codPos, nuevaCantidad);
+											 double restarMonto = cp.getPostre().getPrecioUnitario() * cant;
 											 aux.setTotal(aux.getTotal() - restarMonto);
 										 }
 										 else
 										 {
-											 auxSec.ExistePostreEnSec(codPos);
+											 aux.eliminarPostreVenta(i);
+											 aux.setTotal(aux.getTotal() - cp.getPostre().getPrecioUnitario() * cant);
 										 }
 										 
 									 }
@@ -214,7 +214,7 @@ public class Fachada {
 	    }
 	    else
 	    {
-	        if(aux.getSec().darCantidadTotalPostres() == 0 || cancela)
+	        if(aux.darCantPostres() == 0 || cancela)
 	        {
 	            ventas.eliminarVenta(numVenta);
 	        }
@@ -264,32 +264,17 @@ public class Fachada {
 	    if (fecha.isAfter(LocalDate.now())) {
 	        throw new FechaInvalidaException("Fecha inválida.");
 	    }
-
-	    int cantTotal = 0;
 	    double montoTotal = 0;
-
+	    int cantidad = 0;
 	    for (Venta v : ventas.getLista()) {
 
 	        if (v.isFinalizado() && v.getFecha().isEqual(fecha)) {
-
-	            for (CantPostre cp : v.getSec().getLista()) {
-
-	                if (cp.getPostre().getCodigo().equals(codigo)) {
-
-	                    int cantidad = cp.getCantidad();
-	                    double precio = cp.getPostre().getPrecioUnitario();
-
-	                    cantTotal += cantidad;
-	                    montoTotal += precio * cantidad;
-	                }
-	            }
+	        	montoTotal += v.darMontoPostre(codigo, fecha);
+	        	cantidad += v.darCantidadPostreVenta(codigo);
 	        }
 	    }
 	    
-	    VORecaudacionPostreFecha nuevo = new VORecaudacionPostreFecha(montoTotal, cantTotal);
-	    
-	    
-	    
+	    VORecaudacionPostreFecha nuevo = new VORecaudacionPostreFecha(montoTotal, cantidad);
 	    return nuevo;
 	}
 	
