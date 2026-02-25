@@ -15,14 +15,20 @@ public class Fachada {
 	private ColeccionPostres postres;
 	private ColeccionVentas ventas;
 	private SecCantPostres secCantPostres;
-	
+	private VOPersistencia colecciones;
 	public Fachada() {
 		this.postres = new ColeccionPostres();
 		this.ventas = new ColeccionVentas();
 		this.p = new Persistencia();
+		this.colecciones = new VOPersistencia(this.postres,this.ventas);
+		
 	}
-	public void IngresarPostre(VOPostreIngreso datosPostre) throws PrecioPostreException
+	public void IngresarPostre(VOPostreIngreso datosPostre) throws PrecioPostreException, CodigoExistenteException
 	{
+		if(datosPostre.getCodigo().equals(postres.find(datosPostre.getCodigo()).getCodigo()))
+		{
+			throw new CodigoExistenteException("El prostre a ingresar ya existe");
+		}
 	    if(datosPostre.getPrecioUnitario() <= 0)
 	    {
 	        throw new PrecioPostreException("El precio del postre es menor o igual a 0.");
@@ -55,23 +61,36 @@ public class Fachada {
 		}		
 	}
 	
-	public VOPostreDetallado listarPostreDetallado(String codigo) throws PostreNoExisteException
+	public VOPostreGeneral listarPostreDetallado(String codigo) throws PostreNoExisteException
 	{
 		if(!postres.member(codigo))
 		{
 			throw new PostreNoExisteException("El codigo ingresado no pertenece a ningun postre registrado.");
 		}
 		else
-		{			
-			PostreLight aux = (PostreLight) postres.find(codigo);
-			VOPostreDetallado nuevo = new VOPostreDetallado(aux.getCodigo(), aux.getNombre(), aux.getPrecioUnitario(), aux.darTipo(), aux.getEndulzante(), aux.getDescripcion());
-			return nuevo;
+		{
+			VOPostreGeneral res;
+			if(postres.find(codigo).darTipo() == TipoPostre.COMUN)
+			{
+				Postre p = postres.find(codigo);
+				res = new VOPostreGeneral(p.getCodigo(), p.getNombre(), p.getPrecioUnitario(), p.darTipo());
+			}
+			else
+			{
+				PostreLight p = (PostreLight) postres.find(codigo);
+				res = new VOPostreDetallado(p.getCodigo(), p.getNombre(), p.getPrecioUnitario(), p.darTipo(), p.getEndulzante(), p.getDescripcion());
+			}
+			return res;
 		}
 	}
 	
-	public void IngresarVenta(VOVentaIngreso v) throws ErrorFechaException// A consultar este procedimiento porque según el desglose tenemos que tener la secuencia de ventas, y acá hay un VO.
+	public void IngresarVenta(VOVentaIngreso v) throws ErrorFechaException
 	{
 			Venta nueva = null;
+			if(!v.getFechaVenta().isAfter(ventas.obtenerUltimaVenta().getFecha()))
+			{
+				throw new ErrorFechaException("La venta es anterior a la ultima fecha ingresada");
+			}
 			if(ventas.Largo()==0)
 			{
 				nueva = new Venta(v.getDireccionEntrega(), 1);
@@ -282,16 +301,17 @@ public class Fachada {
 	    return nuevo;
 	}
 	
-	public void RespaldarDatos(VOPersistencia VOP) throws PersistenciaException
+	public void RespaldarDatos() throws PersistenciaException
 	{
-		p.respaldarColecciones(VOP);
+		p.respaldarColecciones(colecciones);
 	}
 	
-	public VOPersistencia RecuperarDatos() throws PersistenciaException
+	public void RecuperarDatos() throws PersistenciaException
 	{
-		   
-		return p.recuperarColecciones();
-
+		colecciones = p.recuperarColecciones();
+		ventas = colecciones.getVentas();
+		postres = colecciones.getPostres();
+		
 	}
 }
 	

@@ -9,3 +9,7 @@
 /VentaFinalizadaException.class
 /VentaNoExisteException.class
 /PersistenciaException.class
+/CodigoExistenteException.class
+/SecCantPostreVacia.class
+/PostreNoExisteEnSec.class
+/CodigoNoAlfanumerico.class
