@@ -1,7 +1,8 @@
 package Logica.Objetos.VObjects;
+import java.io.Serializable;
+
 import Logica.Postres.ColeccionPostres;
 import Logica.Ventas.ColeccionVentas;
-import java.io.Serializable;
 
 public class VOPersistencia implements Serializable {
 	private static final long serialVersionUID = 0;

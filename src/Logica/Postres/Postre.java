@@ -1,6 +1,7 @@
 package Logica.Postres;
-import Logica.Objetos.TipoPostre;
 import java.io.Serializable;
+
+import Logica.Objetos.TipoPostre;
 
 public class Postre implements Serializable{
 	private String codigo;

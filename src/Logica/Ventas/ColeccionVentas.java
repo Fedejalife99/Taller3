@@ -1,11 +1,11 @@
 package Logica.Ventas;
 import java.io.Serializable;
-
-import Logica.Objetos.VOVenta;
-import Logica.Objetos.TipoIndice;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import Logica.Objetos.TipoIndice;
+import Logica.Objetos.VOVenta;
 
 
 public class ColeccionVentas implements Serializable{

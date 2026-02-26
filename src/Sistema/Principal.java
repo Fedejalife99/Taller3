@@ -1,9 +1,9 @@
 package Sistema;
-import Logica.Objetos.Fachada;
-import Logica.Objetos.VObjects.*;
-import Logica.Objetos.Exceptions.*;
-import java.time.LocalDate;
 import java.util.List;
+
+import Logica.Objetos.Fachada;
+import Logica.Objetos.VObjects.VOPostreGeneral;
+import Logica.Objetos.VObjects.VOPostreIngreso;
 
 public class Principal
 {

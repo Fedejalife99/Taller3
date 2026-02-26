@@ -1,6 +1,7 @@
 package Logica.Objetos;
-import Logica.Objetos.VObjects.VOVentaIngreso;
 import java.time.LocalDate;
+
+import Logica.Objetos.VObjects.VOVentaIngreso;
 
 public class VOVenta extends VOVentaIngreso{
 	

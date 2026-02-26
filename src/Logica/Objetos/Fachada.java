@@ -1,21 +1,40 @@
 package Logica.Objetos;
-import Logica.Objetos.VObjects.*;
-import Sistema.Persistencia;
-import Logica.Postres.*;
-import Logica.Ventas.*;
-import Logica.Objetos.Exceptions.*;
-import Logica.Objetos.VObjects.VOPersistencia;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import Logica.Objetos.Exceptions.CantidadUnidadesException;
+import Logica.Objetos.Exceptions.CodigoExistenteException;
+import Logica.Objetos.Exceptions.ErrorFechaException;
+import Logica.Objetos.Exceptions.ErrorIndiceException;
+import Logica.Objetos.Exceptions.FechaInvalidaException;
+import Logica.Objetos.Exceptions.NoHayPostresException;
+import Logica.Objetos.Exceptions.PersistenciaException;
+import Logica.Objetos.Exceptions.PostreNoExisteException;
+import Logica.Objetos.Exceptions.PrecioPostreException;
+import Logica.Objetos.Exceptions.VentaFinalizadaException;
+import Logica.Objetos.Exceptions.VentaNoExisteException;
+import Logica.Objetos.VObjects.VOPersistencia;
+import Logica.Objetos.VObjects.VOPostreDetallado;
+import Logica.Objetos.VObjects.VOPostreGeneral;
+import Logica.Objetos.VObjects.VOPostreIngreso;
+import Logica.Objetos.VObjects.VOPostreLightIngreso;
+import Logica.Objetos.VObjects.VOPostresCant;
+import Logica.Objetos.VObjects.VORecaudacionPostreFecha;
+import Logica.Objetos.VObjects.VOVentaIngreso;
+import Logica.Postres.ColeccionPostres;
+import Logica.Postres.Postre;
+import Logica.Postres.PostreLight;
+import Logica.Ventas.ColeccionVentas;
+import Logica.Ventas.Venta;
+import Sistema.Persistencia;
 
 public class Fachada {
 	private Persistencia p;
 	private ColeccionPostres postres;
 	private ColeccionVentas ventas;
-	private SecCantPostres secCantPostres;
 	private VOPersistencia colecciones;
+	
 	public Fachada() {
 		this.postres = new ColeccionPostres();
 		this.ventas = new ColeccionVentas();
@@ -225,7 +244,6 @@ public class Fachada {
 	{
 	    double total = 0;
 	    Venta aux = ventas.obtenerPorNum(numVenta);
-	    System.out.println("Total en finalizarVenta: " + aux.getTotal());
 
 	    if(aux == null)
 	    {
@@ -264,6 +282,8 @@ public class Fachada {
 	
 	public List<VOPostresCant> listarPostresVenta(int numVenta) throws VentaNoExisteException
 	{
+		Venta aux = ventas.obtenerPorNum(numVenta);
+		
 		List<VOPostresCant> listaVO = new ArrayList<>();
 
 		if(ventas.obtenerPorNum(numVenta) == null)
@@ -272,9 +292,22 @@ public class Fachada {
 		}
 		else
 		{			
-			listaVO = secCantPostres.listarSCantPostres();
-		}
+			   for (int i = 0; i < aux.LargoSecuencia(); i++) 
+			   {
+			        CantPostre cp = aux.CantPostreIndice(i);
+			        Postre p = cp.getPostre();
+
+			        VOPostresCant vo = new VOPostresCant(
+			            p.getCodigo(),
+			            p.getNombre(),
+			            p.getPrecioUnitario(),
+			            p.darTipo(),
+			            cp.getCantidad()
+			        );
+			      listaVO.add(vo);
+			   }
 		
+		}
 		return listaVO;
 	}
 	

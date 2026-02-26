@@ -1,7 +1,10 @@
 package Sistema;
-import java.io.*;
-import Logica.Postres.ColeccionPostres;
-import Logica.Ventas.ColeccionVentas;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import Logica.Objetos.Exceptions.PersistenciaException;
 import Logica.Objetos.VObjects.VOPersistencia;
 

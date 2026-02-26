@@ -1,6 +1,5 @@
 package Logica.Objetos.VObjects;
 import Logica.Objetos.TipoPostre;
-import Logica.Objetos.VObjects.VOPostreGeneral;
 
 public class VOPostreDetallado extends VOPostreGeneral{
 	private String endulzante;

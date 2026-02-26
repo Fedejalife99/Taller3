@@ -1,5 +1,4 @@
 package Logica.Objetos.VObjects;
-import Logica.Objetos.VObjects.VOPostreIngreso;
 
 public class VOPostreLightIngreso extends VOPostreIngreso{
 	private String endulzante;
