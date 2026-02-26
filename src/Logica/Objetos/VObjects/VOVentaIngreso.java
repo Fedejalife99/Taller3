@@ -5,8 +5,8 @@ public class VOVentaIngreso{
 	private LocalDate fechaVenta;
 	private String direccionEntrega;
 	
-	public VOVentaIngreso(String direccionEntrega) {
-		this.fechaVenta = LocalDate.now();
+	public VOVentaIngreso(String direccionEntrega,LocalDate fec) {
+		this.fechaVenta = fec;
 		this.direccionEntrega = direccionEntrega;
 	}
 
@@ -16,6 +16,14 @@ public class VOVentaIngreso{
 
 	public String getDireccionEntrega() {
 		return direccionEntrega;
+	}
+
+	public void setFechaVenta(LocalDate fechaVenta) {
+		this.fechaVenta = fechaVenta;
+	}
+
+	public void setDireccionEntrega(String direccionEntrega) {
+		this.direccionEntrega = direccionEntrega;
 	}
 	
 	

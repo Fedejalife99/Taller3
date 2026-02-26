@@ -1,5 +1,7 @@
 package Logica.Objetos;
+
 import java.time.LocalDate;
+import Sistema.Monitor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +24,7 @@ import Logica.Objetos.VObjects.VOPostreLightIngreso;
 import Logica.Objetos.VObjects.VOPostresCant;
 import Logica.Objetos.VObjects.VORecaudacionPostreFecha;
 import Logica.Objetos.VObjects.VOVentaIngreso;
+import Logica.Objetos.Exceptions.PersistenciaException;
 import Logica.Postres.ColeccionPostres;
 import Logica.Postres.Postre;
 import Logica.Postres.PostreLight;
@@ -34,22 +37,26 @@ public class Fachada {
 	private ColeccionPostres postres;
 	private ColeccionVentas ventas;
 	private VOPersistencia colecciones;
+	private Monitor monitor = new Monitor();
 	
-	public Fachada() {
+	public Fachada() throws PersistenciaException{
 		this.postres = new ColeccionPostres();
 		this.ventas = new ColeccionVentas();
 		this.p = new Persistencia();
 		this.colecciones = new VOPersistencia(this.postres,this.ventas);
 		
 	}
-	public void IngresarPostre(VOPostreIngreso datosPostre) throws PrecioPostreException, CodigoExistenteException
+	public void IngresarPostre(VOPostreIngreso datosPostre) throws PrecioPostreException, CodigoExistenteException, InterruptedException
 	{
-		if(datosPostre.getCodigo().equals(postres.find(datosPostre.getCodigo()).getCodigo()))
+		monitor.comienzoEscritura();
+		if(postres.member(datosPostre.getCodigo()))
 		{
+			monitor.terminoEscritura();
 			throw new CodigoExistenteException("El prostre a ingresar ya existe");
 		}
 	    if(datosPostre.getPrecioUnitario() <= 0)
 	    {
+	    	monitor.terminoEscritura();
 	        throw new PrecioPostreException("El precio del postre es menor o igual a 0.");
 	    }
 	    else
@@ -59,31 +66,38 @@ public class Fachada {
 	            VOPostreLightIngreso datosLight = (VOPostreLightIngreso) datosPostre;
 	            PostreLight nuevo = new PostreLight(datosLight.getCodigo(), datosLight.getNombre(), datosLight.getPrecioUnitario(), datosLight.getEndulzante(), datosLight.getDescripcion());
 	            postres.insert(nuevo);
+	            monitor.terminoEscritura();
 	        }
 	        else
 	        {
 	            Postre nuevo = new Postre(datosPostre.getCodigo(), datosPostre.getNombre(), datosPostre.getPrecioUnitario());
 	            postres.insert(nuevo);
+	            monitor.terminoEscritura();
 	        }
 	    }
 	}
 	
-	public List<VOPostreGeneral> listarPostresGral() throws NoHayPostresException
+	public List<VOPostreGeneral> listarPostresGral() throws NoHayPostresException, InterruptedException
 	{
+		monitor.comienzoLectura();
 		if(postres.listarPostresGeneral() == null)
 		{
+			monitor.terminoLectura();
 			throw new NoHayPostresException("No hay postres registrados.");
 		}
 		else
 		{	
+			monitor.terminoLectura();
 			return postres.listarPostresGeneral();
 		}		
 	}
 	
-	public VOPostreGeneral listarPostreDetallado(String codigo) throws PostreNoExisteException
+	public VOPostreGeneral listarPostreDetallado(String codigo) throws PostreNoExisteException, InterruptedException
 	{
+		monitor.comienzoLectura();
 		if(!postres.member(codigo))
 		{
+			monitor.terminoLectura();
 			throw new PostreNoExisteException("El codigo ingresado no pertenece a ningun postre registrado.");
 		}
 		else
@@ -99,52 +113,61 @@ public class Fachada {
 				PostreLight p = (PostreLight) postres.find(codigo);
 				res = new VOPostreDetallado(p.getCodigo(), p.getNombre(), p.getPrecioUnitario(), p.darTipo(), p.getEndulzante(), p.getDescripcion());
 			}
+			monitor.terminoLectura();
 			return res;
 		}
 	}
 	
-	public void IngresarVenta(VOVentaIngreso v) throws ErrorFechaException
+	public void IngresarVenta(VOVentaIngreso v) throws ErrorFechaException, InterruptedException
 	{
-			Venta nueva = null;
-			if(!v.getFechaVenta().isAfter(ventas.obtenerUltimaVenta().getFecha()))
-			{
-				throw new ErrorFechaException("La venta es anterior a la ultima fecha ingresada");
-			}
-			if(ventas.Largo()==0)
-			{
-				nueva = new Venta(v.getDireccionEntrega(), 1);
-			}
-			else
-			{
-				nueva = new Venta(v.getDireccionEntrega(), ventas.Largo()+1);
-			}
-			nueva.setFinalizado(false);
-			ventas.insBack(nueva);
+		monitor.comienzoEscritura();
+	    Venta ultima = ventas.obtenerUltimaVenta();
+	    if(ultima != null && v.getFechaVenta().isBefore(ultima.getFecha()))
+	    {
+	    	monitor.terminoEscritura();
+	        throw new ErrorFechaException("La venta es anterior a la ultima fecha ingresada");
+	    }
+	    Venta nueva = null;
+	    if(ventas.Largo() == 0)
+	    {
+	        nueva = new Venta(v.getDireccionEntrega(),v.getFechaVenta(), 1);
+	    }
+	    else
+	    {
+	        nueva = new Venta(v.getDireccionEntrega(), v.getFechaVenta(), ventas.Largo() + 1);
+	    }
+	    nueva.setFinalizado(false);
+	    ventas.insBack(nueva);
+	    monitor.terminoEscritura();
 	}
-	
-	public void agregarPostreVenta(String codigoPostre, int cantUnidades, int numVenta) throws PostreNoExisteException, VentaNoExisteException, CantidadUnidadesException, VentaFinalizadaException
+	public void agregarPostreVenta(String codigoPostre, int cantUnidades, int numVenta) throws PostreNoExisteException, VentaNoExisteException, CantidadUnidadesException, VentaFinalizadaException, InterruptedException
 	{
-		
+		monitor.comienzoEscritura();
 		if (!postres.member(codigoPostre)) {
+			monitor.terminoEscritura();
 			throw new PostreNoExisteException("El código ingresado no corresponde con ningún postre.");
 		}
 		
 		Venta aux = ventas.obtenerPorNum(numVenta);
 		if (aux == null) {
+			monitor.terminoEscritura();
 			throw new VentaNoExisteException("El número de venta no es correcto.");
 		}
 		if(aux.isFinalizado())
 		{
+			monitor.terminoEscritura();
 			throw new VentaFinalizadaException("No se pueden agregar postres a esta venta porque fue finalizada");
 		}
 		
 		if (cantUnidades <= 0 || cantUnidades > 40) {
+			monitor.terminoEscritura();
 			throw new CantidadUnidadesException("La cantidad de postres debe estar entre 1 y 40.");
 		}
 		
 		int totalActual = aux.darCantPostres();
 		
 		if (totalActual == 40) {
+			monitor.terminoEscritura();
 			throw new CantidadUnidadesException("No se pueden agregar más postres. La venta ya tiene 40.");
 		}
 		
@@ -154,6 +177,7 @@ public class Fachada {
 
 		    if (nuevoTotal > 40) {
 		        aux.setCantidadPostre(codigoPostre, 40);
+		        monitor.terminoEscritura();
 		        throw new CantidadUnidadesException("Se limitó la cantidad total a 40 unidades.");
 		    }
 
@@ -164,6 +188,7 @@ public class Fachada {
 		} else {
 
 		    if (nuevoTotal > 40) {
+		    	monitor.terminoEscritura();
 		        throw new CantidadUnidadesException("No se pueden agregar más de 40 postres a una venta.");
 		    }
 
@@ -172,32 +197,38 @@ public class Fachada {
 		    aux.insertarCantPostre(cantp);
 		    aux.setTotal(aux.getTotal() + p.getPrecioUnitario() * cantUnidades);
 		}
+		monitor.terminoEscritura();
 	}
 	
-	public void eliminarCantPostres(String codPos, int cant, int numVent) throws VentaNoExisteException, VentaFinalizadaException, CantidadUnidadesException, PostreNoExisteException
+	public void eliminarCantPostres(String codPos, int cant, int numVent) throws VentaNoExisteException, VentaFinalizadaException, CantidadUnidadesException, PostreNoExisteException, InterruptedException
 	{
+		monitor.comienzoEscritura();
 		Venta aux = ventas.obtenerPorNum(numVent);
 		
 		if(aux == null)
 		{
+			monitor.terminoEscritura();
 			throw new VentaNoExisteException("La venta no existe en el sistema.");
 		}
 		else
 		{
 			if(aux.isFinalizado()==true)
 			{
+				monitor.terminoEscritura();
 				throw new VentaFinalizadaException("No se puede modificar una venta finalizada.");
 			}
 			else
 			{
 				if(cant < 0)
 				{
+					monitor.terminoEscritura();
 					throw new CantidadUnidadesException("La cantidad a eliminar debe ser mayor a 0.");
 				}
 				else
 				{
 					if(!aux.existePostreEnVenta(codPos))
 					{
+						monitor.terminoEscritura();
 						throw new PostreNoExisteException("El postre no está asociado a la venta.");
 					}
 					else
@@ -212,6 +243,7 @@ public class Fachada {
 								 {
 									 if(cp.getCantidad() < cant)
 									 {
+										 monitor.terminoEscritura();
 										 throw new CantidadUnidadesException("No se pueden eliminar más unidades de las existentes.");
 									 }
 									 else
@@ -232,25 +264,30 @@ public class Fachada {
 									 }
 									 encontre=true;
 								 }
+								 
 							 }
 					}
+					monitor.terminoEscritura();
 				}
 			}
 		}
 	}
 	
 	
-	public double finalizarVenta(int numVenta, boolean cancela) throws VentaNoExisteException, VentaFinalizadaException
+	public double finalizarVenta(int numVenta, boolean cancela) throws VentaNoExisteException, VentaFinalizadaException, InterruptedException
 	{
+		monitor.comienzoEscritura();
 	    double total = 0;
 	    Venta aux = ventas.obtenerPorNum(numVenta);
 
 	    if(aux == null)
 	    {
+	    	monitor.terminoEscritura();
 	        throw new VentaNoExisteException("La venta con el nro indicado no existe.");
 	    }
 	    else if(aux.isFinalizado())
 	    {
+	    	monitor.terminoEscritura();
 	        throw new VentaFinalizadaException("No se puede modificar una venta finalizada.");
 	    }
 	    else
@@ -266,28 +303,33 @@ public class Fachada {
 	            total = aux.getTotal();
 	        }
 	    }
-
+	    monitor.terminoEscritura();
 	    return total;
+	    
 	}
 	
-	public List<VOVenta> listarVentasIndic(TipoIndice indice) throws ErrorIndiceException
+	public List<VOVenta> listarVentasIndic(TipoIndice indice) throws ErrorIndiceException, InterruptedException
 	{
-		if(indice!=TipoIndice.T || indice!=TipoIndice.P || indice!=TipoIndice.F)
-		{
-			throw new ErrorIndiceException("El indice indicado no es válido.");
-		}
-	
-		return ventas.listarVentas(indice);
+		monitor.comienzoLectura();
+		 if(indice != TipoIndice.T && indice != TipoIndice.P && indice != TipoIndice.F)
+		 {
+			 	monitor.terminoLectura();
+		        throw new ErrorIndiceException("El indice indicado no es valido.");
+		 }
+		 monitor.terminoLectura();
+		 return ventas.listarVentas(indice);
 	}
 	
-	public List<VOPostresCant> listarPostresVenta(int numVenta) throws VentaNoExisteException
+	public List<VOPostresCant> listarPostresVenta(int numVenta) throws VentaNoExisteException, InterruptedException
 	{
+		monitor.comienzoLectura();
 		Venta aux = ventas.obtenerPorNum(numVenta);
 		
 		List<VOPostresCant> listaVO = new ArrayList<>();
 
 		if(ventas.obtenerPorNum(numVenta) == null)
 		{
+			monitor.terminoLectura();
 			throw new VentaNoExisteException("La venta no existe.");
 		}
 		else
@@ -308,16 +350,21 @@ public class Fachada {
 			   }
 		
 		}
+		monitor.terminoLectura();
 		return listaVO;
 	}
 	
-	public VORecaudacionPostreFecha recaudacionPostreFecha(String codigo, LocalDate fecha) throws PostreNoExisteException, FechaInvalidaException 
+	public VORecaudacionPostreFecha recaudacionPostreFecha(String codigo, LocalDate fecha) throws PostreNoExisteException, FechaInvalidaException, InterruptedException
 	{
-	    if (!postres.member(codigo)) {
+		monitor.comienzoLectura();
+	    if (!postres.member(codigo)) 
+	    {
+	    	monitor.terminoLectura();
 	        throw new PostreNoExisteException("El código de postre no existe.");
 	    }
 
 	    if (fecha.isAfter(LocalDate.now())) {
+	    	monitor.terminoLectura();
 	        throw new FechaInvalidaException("Fecha inválida.");
 	    }
 	    double montoTotal = 0;
@@ -325,25 +372,42 @@ public class Fachada {
 	    for (Venta v : ventas.getLista()) {
 
 	        if (v.isFinalizado() && v.getFecha().isEqual(fecha)) {
-	        	montoTotal += v.darMontoPostre(codigo, fecha);
+	        	montoTotal += v.darMontoPostre(codigo);
 	        	cantidad += v.darCantidadPostreVenta(codigo);
 	        }
 	    }
 	    
 	    VORecaudacionPostreFecha nuevo = new VORecaudacionPostreFecha(montoTotal, cantidad);
+	    monitor.terminoLectura();
 	    return nuevo;
 	}
 	
-	public void RespaldarDatos() throws PersistenciaException
+	public void RespaldarDatos() throws PersistenciaException, InterruptedException
 	{
+		monitor.comienzoEscritura();
 		p.respaldarColecciones(colecciones);
+		monitor.terminoEscritura();
 	}
 	
-	public void RecuperarDatos() throws PersistenciaException
+	public void RecuperarDatos()throws InterruptedException
 	{
-		colecciones = p.recuperarColecciones();
-		ventas = colecciones.getVentas();
-		postres = colecciones.getPostres();
+		monitor.comienzoLectura();
+		try
+		{
+			colecciones = p.recuperarColecciones();
+			ventas = colecciones.getVentas();
+			postres = colecciones.getPostres();
+			monitor.terminoLectura();
+		}
+		catch(PersistenciaException e)
+		{
+			monitor.terminoLectura();
+			monitor.comienzoEscritura();
+			postres = new ColeccionPostres();
+	        ventas = new ColeccionVentas();
+	        colecciones = new VOPersistencia(postres, ventas);
+	        monitor.terminoEscritura();
+		}
 		
 	}
 }

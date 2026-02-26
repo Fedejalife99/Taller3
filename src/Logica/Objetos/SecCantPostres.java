@@ -95,13 +95,12 @@ public class SecCantPostres implements Serializable{
 	{
 		return ACT.get(pos);
 	}
-	public double recaudadoPorPostre(String cod, LocalDate fec)
+	public double recaudadoPorPostre(String cod)
 	{
 		double montoTotal = 0;
 		for (CantPostre cp : ACT) {
 			
             if (cp.getPostre().getCodigo().equals(cod)) {
-
                 int cantidad = cp.getCantidad();
                 double precio = cp.getPostre().getPrecioUnitario();
 

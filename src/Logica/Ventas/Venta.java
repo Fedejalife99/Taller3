@@ -15,10 +15,10 @@ public class Venta implements Serializable{
 	private boolean finalizado;
 	private SecCantPostres sec;
 	
-	public Venta(String direccion, int numeroVenta) 
+	public Venta(String direccion, LocalDate fec, int numeroVenta) 
 	{
 		this.numeroVenta = numeroVenta;
-		Fecha = LocalDate.now();
+		Fecha = fec;
 		this.direccion = direccion;
 		this.sec = new SecCantPostres();
 	}
@@ -81,9 +81,9 @@ public class Venta implements Serializable{
 	{
 		sec.eliminar(indice);
 	}
-	public double darMontoPostre(String codigo, LocalDate fec)
+	public double darMontoPostre(String codigo)
 	{
-		return sec.recaudadoPorPostre(codigo, fec);
+		return sec.recaudadoPorPostre(codigo);
 	}
 	
 	public int darCantidadPostreVenta(String codigo)

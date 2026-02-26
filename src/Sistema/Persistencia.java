@@ -4,19 +4,31 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-
+import Sistema.ConfigProperties;
 import Logica.Objetos.Exceptions.PersistenciaException;
 import Logica.Objetos.VObjects.VOPersistencia;
 
 public class Persistencia
 {
-    private static final String aVOPersistencia = "VOPersistencia.dat";
-
+    private String archPersistencia = null;
+    public Persistencia() throws PersistenciaException
+    {
+    	try
+    	{
+    		ConfigProperties conf = new ConfigProperties();
+    		this.archPersistencia = conf.getNomArch();
+    	}catch (IOException e)
+    	{
+            e.printStackTrace();
+            throw new PersistenciaException("Error al Obtener el nombre del archivo.");
+    	}
+    }
+    
     public void respaldarColecciones(VOPersistencia VOP) throws PersistenciaException
     {
         try
         {
-            FileOutputStream f = new FileOutputStream(aVOPersistencia);
+            FileOutputStream f = new FileOutputStream(archPersistencia);
             ObjectOutputStream o = new ObjectOutputStream(f);
             o.writeObject(VOP);
             o.close();
@@ -33,9 +45,12 @@ public class Persistencia
     {
         try
         {
-        	FileInputStream f = new FileInputStream(aVOPersistencia);
+        	FileInputStream f = new FileInputStream(archPersistencia);
             ObjectInputStream o = new ObjectInputStream(f);
-            return (VOPersistencia) o.readObject();
+            VOPersistencia vop = (VOPersistencia) o.readObject();
+            o.close();
+            f.close();
+            return vop;
 
         }
         catch (IOException | ClassNotFoundException e)

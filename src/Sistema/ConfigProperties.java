@@ -1,20 +1,22 @@
+package Sistema;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
 public class ConfigProperties {
-    private Properties propiedades;
+    static private Properties propiedades;
 
-    public ConfigProperties(String rutaArchivo) throws IOException {
+    public ConfigProperties() throws IOException {
         propiedades = new Properties();
-        try (FileInputStream fis = new FileInputStream(rutaArchivo)) {
+        try (FileInputStream fis = new FileInputStream("./.properties")) 
+        {
             propiedades.load(fis);
         }
     }
     
     public String getNomArch()
     {
-    	return propiedades.getProperty("nomArch");
+    	return propiedades.getProperty("nomarchivo");
     }
     public String getIpServidor() 
     {
