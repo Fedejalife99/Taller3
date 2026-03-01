@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import Sistema.Monitor;
 import java.util.ArrayList;
 import java.util.List;
+import java.rmi.server.UnicastRemoteObject;
+import java.rmi.RemoteException;
 
 import Logica.Objetos.Exceptions.CantidadUnidadesException;
 import Logica.Objetos.Exceptions.CodigoExistenteException;
@@ -32,21 +34,25 @@ import Logica.Ventas.ColeccionVentas;
 import Logica.Ventas.Venta;
 import Sistema.Persistencia;
 
-public class Fachada {
+public class Fachada extends UnicastRemoteObject implements IFachada{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private Persistencia p;
 	private ColeccionPostres postres;
 	private ColeccionVentas ventas;
 	private VOPersistencia colecciones;
 	private Monitor monitor = new Monitor();
 	
-	public Fachada() throws PersistenciaException{
+	public Fachada() throws RemoteException, PersistenciaException{
 		this.postres = new ColeccionPostres();
 		this.ventas = new ColeccionVentas();
 		this.p = new Persistencia();
 		this.colecciones = new VOPersistencia(this.postres,this.ventas);
 		
 	}
-	public void IngresarPostre(VOPostreIngreso datosPostre) throws PrecioPostreException, CodigoExistenteException, InterruptedException
+	public void IngresarPostre(VOPostreIngreso datosPostre) throws RemoteException, PrecioPostreException, CodigoExistenteException, InterruptedException
 	{
 		monitor.comienzoEscritura();
 		if(postres.member(datosPostre.getCodigo()))
@@ -77,7 +83,7 @@ public class Fachada {
 	    }
 	}
 	
-	public List<VOPostreGeneral> listarPostresGral() throws NoHayPostresException, InterruptedException
+	public List<VOPostreGeneral> listarPostresGral() throws RemoteException, NoHayPostresException, InterruptedException
 	{
 		monitor.comienzoLectura();
 		if(postres.listarPostresGeneral() == null)
@@ -92,7 +98,7 @@ public class Fachada {
 		}		
 	}
 	
-	public VOPostreGeneral listarPostreDetallado(String codigo) throws PostreNoExisteException, InterruptedException
+	public VOPostreGeneral listarPostreDetallado(String codigo) throws RemoteException, PostreNoExisteException, InterruptedException
 	{
 		monitor.comienzoLectura();
 		if(!postres.member(codigo))
@@ -118,7 +124,7 @@ public class Fachada {
 		}
 	}
 	
-	public void IngresarVenta(VOVentaIngreso v) throws ErrorFechaException, InterruptedException
+	public void IngresarVenta(VOVentaIngreso v) throws RemoteException, ErrorFechaException, InterruptedException
 	{
 		monitor.comienzoEscritura();
 	    Venta ultima = ventas.obtenerUltimaVenta();
@@ -140,7 +146,7 @@ public class Fachada {
 	    ventas.insBack(nueva);
 	    monitor.terminoEscritura();
 	}
-	public void agregarPostreVenta(String codigoPostre, int cantUnidades, int numVenta) throws PostreNoExisteException, VentaNoExisteException, CantidadUnidadesException, VentaFinalizadaException, InterruptedException
+	public void agregarPostreVenta(String codigoPostre, int cantUnidades, int numVenta) throws RemoteException, PostreNoExisteException, VentaNoExisteException, CantidadUnidadesException, VentaFinalizadaException, InterruptedException
 	{
 		monitor.comienzoEscritura();
 		if (!postres.member(codigoPostre)) {
@@ -200,7 +206,7 @@ public class Fachada {
 		monitor.terminoEscritura();
 	}
 	
-	public void eliminarCantPostres(String codPos, int cant, int numVent) throws VentaNoExisteException, VentaFinalizadaException, CantidadUnidadesException, PostreNoExisteException, InterruptedException
+	public void eliminarCantPostres(String codPos, int cant, int numVent) throws RemoteException, VentaNoExisteException, VentaFinalizadaException, CantidadUnidadesException, PostreNoExisteException, InterruptedException
 	{
 		monitor.comienzoEscritura();
 		Venta aux = ventas.obtenerPorNum(numVent);
@@ -275,7 +281,7 @@ public class Fachada {
 	}
 	
 	
-	public double finalizarVenta(int numVenta, boolean cancela) throws VentaNoExisteException, VentaFinalizadaException, InterruptedException
+	public double finalizarVenta(int numVenta, boolean cancela) throws RemoteException, VentaNoExisteException, VentaFinalizadaException, InterruptedException
 	{
 		monitor.comienzoEscritura();
 	    double total = 0;
@@ -309,7 +315,7 @@ public class Fachada {
 	    
 	}
 	
-	public List<VOVenta> listarVentasIndic(TipoIndice indice) throws ErrorIndiceException, InterruptedException
+	public List<VOVenta> listarVentasIndic(TipoIndice indice) throws RemoteException, ErrorIndiceException, InterruptedException
 	{
 		monitor.comienzoLectura();
 		 if(indice != TipoIndice.T && indice != TipoIndice.P && indice != TipoIndice.F)
@@ -321,7 +327,7 @@ public class Fachada {
 		 return ventas.listarVentas(indice);
 	}
 	
-	public List<VOPostresCant> listarPostresVenta(int numVenta) throws VentaNoExisteException, InterruptedException
+	public List<VOPostresCant> listarPostresVenta(int numVenta) throws RemoteException, VentaNoExisteException, InterruptedException
 	{
 		monitor.comienzoLectura();
 		Venta aux = ventas.obtenerPorNum(numVenta);
@@ -355,7 +361,7 @@ public class Fachada {
 		return listaVO;
 	}
 	
-	public VORecaudacionPostreFecha recaudacionPostreFecha(String codigo, LocalDate fecha) throws PostreNoExisteException, FechaInvalidaException, InterruptedException
+	public VORecaudacionPostreFecha recaudacionPostreFecha(String codigo, LocalDate fecha) throws RemoteException, PostreNoExisteException, FechaInvalidaException, InterruptedException
 	{
 		monitor.comienzoLectura();
 	    if (!postres.member(codigo)) 
@@ -383,14 +389,14 @@ public class Fachada {
 	    return nuevo;
 	}
 	
-	public void RespaldarDatos() throws PersistenciaException, InterruptedException
+	public void RespaldarDatos() throws RemoteException, PersistenciaException, InterruptedException
 	{
 		monitor.comienzoEscritura();
 		p.respaldarColecciones(colecciones);
 		monitor.terminoEscritura();
 	}
 	
-	public void RecuperarDatos()throws InterruptedException
+	public void RecuperarDatos()throws RemoteException, InterruptedException
 	{
 		monitor.comienzoLectura();
 		try
